@@ -73,7 +73,10 @@ def scores_sentiment_tweets (scores_dict, tweets):
 			if word_phrase in scores_dict: 
 				score = score + scores_dict[word_phrase] 
 				
-		print str(score)
+		if score >= 0: 
+			print "positive:" + str(score) + ""
+		if score < 0: 		
+			print "negative:" + str(score) + ""
 	
 def main():
 	# Sentiment Dictionary 
