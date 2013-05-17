@@ -19,7 +19,7 @@ import sys, re, json
 #
 # 
 #	We recommend that you build on your solution to Problem 2.
-#	There are three different objects within the tweet that you can use to determine it’s origin.
+#	There are three different objects within the tweet that you can use to determine it's origin.
 #	1 The coordinates object
 #   2 The place object
 #	3 The user object
@@ -55,59 +55,44 @@ def lines_tweets_json(filename):
 	tweets = []
 	for line in tweets_file:
 		tweet_dict = json.loads(line)
-		
-if all(k in tweets[index].keys() for k in ("text","place")):
-            if not (tweets[index]["place"] == None):
-                #if not (type(tweets[index]["place"]["state_code"]) == "NoneType"):
-                    tweet_word = tweets[index]["text"].split()
-                    tweet_state = tweets[index]["place"]["country_code"]
-					
-					
-		if 'text' in tweet_dict.keys() and 'user' in tweet_dict.keys():
-			text = tweet_dict["text"].encode('utf-8')
-			tweets.append(text)
+		if 'place' in tweet_dict.keys():
+			if tweet_dict['place'] != None and tweet_dict["place"]["country"] == "United States" and tweet_dict["place"]["country_code"] == "US":		
+				tweets.append((tweet_dict["text"].encode('utf-8'), ((tweet_dict["place"]["full_name"]).split(",")[1]).strip())) 
 	tweets_file.close()
 	return tweets
 
-def processTweet(text, phrases=True):
+def processTweet(text):
 	tokens = re.split(" ", text.lower())
-	if phrases:
-		pairs = []		
-		lastAnt = None		
-        last = None		
-        for tok in tokens:			
-			if lastAnt != None and last != None:
-				pairs.append("%s %s %s" % (lastAnt, last, tok))
-			if last != None:
-				pairs.append("%s %s" % (last, tok))								
-			lastAnt = last 
-			last = tok
-        tokens.extend(pairs)
 	if '' in tokens:
 		tokens.remove('')
 	return tokens
-
+			
 def scores_sentiment_tweets (scores_dict, tweets): 	
+	states = {} 	
 	# Processing tweet 	
-    for tweet in tweets: 		
+	for (tweet_text, tweet_state) in tweets:
 		score = 0.0
-		tweet_word_phrases = processTweet(tweet)
-		for word_phrase in tweet_word_phrases: 
-			if word_phrase in scores_dict: 
-				score = score + scores_dict[word_phrase] 
-				
-		if score >= 0: 
-			print "positive:" + str(score) + ""
-		if score < 0: 		
-			print "negative:" + str(score) + ""
+		for (x,y) in scores_dict.iteritems():
+			if (x) in tweet_text:
+				score = score + float(y)
+                if tweet_state in states:
+                    states[tweet_state] += score
+                else:
+                    states[tweet_state] = score
+	
+	score = 0.0
+	top_state = ""
+	for key, value in states.iteritems():
+		if value > score:
+			top_state = key
+			score = value
+	print top_state				
 	
 def main():
 	# Sentiment Dictionary 
 	scores_dict =  lines_scores(sys.argv[1]) 	
 	# Tweets 
 	tweets = lines_tweets_json(sys.argv[2]) 
-	
-	#tweets = ["RT @gsantosgo Why Linux is faster than Windows http://blog.zorinaq.com/?e=74  written by a Windows kernel developer","Does not work doubt can't stand", "Worth celebrated celebrates"]
 	# Calculate Sentiment Scores 
 	scores_sentiment_tweets(scores_dict, tweets)
 	

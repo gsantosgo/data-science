@@ -28,28 +28,43 @@ import sys, re, json
 #	Remember your output must contain floats, not ints.
 # 
 # ---------------------------------------------------------------------------------------------
+
+def lines_hashtags_json(filename):
+	tweets_file = open(filename)
+	hashtags = []
+	for line in tweets_file:
+		tweet_dict = json.loads(line)		
+		if 'entities' in tweet_dict.keys():
+			hashtags_list = tweet_dict["entities"]["hashtags"]
+			if hashtags_list: 				
+				for x in hashtags_list:
+					hashtags.append(x['text'].encode('utf-8'))			
+						
+	tweets_file.close()
+	return hashtags
 	
 def lines_tweets_json(filename):
 	tweets_file = open(filename)
 	tweets = []
 	for line in tweets_file:
-		tweet_dict = json.loads(line)
+		tweet_dict = json.loads(line)		
 		if 'text' in tweet_dict.keys():
 			text = tweet_dict["text"].encode('utf-8')
 			tweets.append(text)
+			
+
+			
 	tweets_file.close()
 	return tweets
 
 	
-def top_ten(tweets): 		
-	hashtag_dic = {}
-	hashtag = re.compile(r'#[0-9a-zA-Z+_]+',re.IGNORECASE)	
-	word_list = hashtag.findall(tweets)
-	for word in word_list:
+def top_ten(hashtags_list): 		
+	hashtag_dic = {}	
+	for hashtag in hashtags_list:
 		try:
-			hashtag_dic[word] += 1
+			hashtag_dic[hashtag] += 1
 		except:
-			hashtag_dic[word] = 1	
+			hashtag_dic[hashtag] = 1	
 		
 	sorted_list = [x for x in hashtag_dic.iteritems()]
 	#sorted_list.sort(key=lambda x: x[0]) # sort by key
@@ -66,13 +81,11 @@ def top_ten(tweets):
 		print sorted_list[index][0] + " " + str(float(sorted_list[index][1]))
 			
 def main():
-	# Tweets 
-	tweets = lines_tweets_json(sys.argv[1]) 	
-	#tweets = ["RT @gsantosgo Why Linux is faster than Windows http://blog.zorinaq.com/?e=74  written by a Windows kernel developer # #  #Windows","#Rstats Mineria Does not work doubt #hola can't stand", "Worth celebrated celebrates #RStats","#RStats prueba"]
+	# Hashtags 
+	all_hashtags = lines_hashtags_json(sys.argv[1])	
 	
-	all_tweets = " ".join(tweets)
-	# Calculate Sentiment Scores 
-	top_ten(all_tweets)
+	# Calculate To Ten 
+	top_ten(all_hashtags)
 	
 if __name__ == '__main__':
 	try:

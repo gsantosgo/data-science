@@ -23,10 +23,86 @@ Problem 1: Inspecting the Reuters Dataset; Relational Algebra
 	HAVING sum(count) > 300
 	);
 
-(f) select count(*) from (
-	select distinct(docid) from (
-	select docid from Frequency where term = "transactions"
-	UNION 
-	select docid from Frequency where term = "word")
-	);
+(f)
+
+
+	select count(docid)
+	from Frequency main
+	where main.term = "world" and exists(select NULL from Frequency sec where sec.docid=main.docid and sec.term='transactions');
+	
+	select count(distinct(docid)) from Frequency where term = "world" AND docid in (
+	select distinct(docid) from Frequency where term like "transactions");
+	
+	
+Problem 2: Matrix Multiplication in SQL
+
+SELECT A.row_num, B.col_num, sum(A.value * B.value)
+FROM A, B 
+WHERE A.col_num = B.row_num
+GROUP by A.row_num, B.col_num;
+
+Problem 3: Working with a Term-Document Matrix
+
+(h) similarity matrix
+
+# Step 1. Filter 
+CREATE VIEW FrequencyA
+AS SELECT docid, term, count 
+FROM Frequency 
+WHERE docid = '10080_txt_crude' OR docid = '17035_txt_earn';
+
+# Step 2. Transpose 
+CREATE VIEW TransFrequency
+AS SELECT term, docid, count 
+FROM Frequency 
+WHERE docid = '10080_txt_crude' OR docid = '17035_txt_earn';
+
+# Step 3. Matrix Multiplication 
+SELECT A.docid, B.docid, sum(A.count * B.count)
+FROM FrequencyA A, TransFrequency B 
+WHERE A.term = B.term
+GROUP by A.docid, B.docid;
+
+# Step 4. Result
+10080_txt_crude|10080_txt_crude|1828
+10080_txt_crude|17035_txt_earn|19
+17035_txt_earn|10080_txt_crude|19
+17035_txt_earn|17035_txt_earn|144	
+
+(i) keyword search: Find the best matching document to the keyword query "washington taxes treasury". You can add this set of keywords to the document corpus with a union of scalar queries: 
+
+SELECT * FROM frequency
+UNION
+SELECT 'q' as docid, 'washington' as term, 1 as count 
+UNION
+SELECT 'q' as docid, 'taxes' as term, 1 as count
+UNION 
+SELECT 'q' as docid, 'treasury' as term, 1 as count
+
+# Step 1. 
+CREATE VIEW MatrixA AS
+SELECT * FROM frequency
+UNION
+SELECT 'q' as docid, 'washington' as term, 1 as count 
+UNION
+SELECT 'q' as docid, 'taxes' as term, 1 as count
+UNION 
+SELECT 'q' as docid, 'treasury' as term, 1 as count
+
+# Step 2. Transpose 
+CREATE VIEW TransMatrixA
+AS SELECT term, docid, count 
+FROM MatrixA
+
+# Step 3. Matrix Multiplication 
+SELECT B.docid, sum(A.count * B.count) AS SUM 
+FROM MatrixA A, TransMatrixA B 
+WHERE A.term = B.term AND A.docid = 'q'
+GROUP by A.docid, B.docid
+ORDER BY SUM; 
+
+Step 4. Result 
+(19775_txt_interest,6)
+
+6 (the score to submit)
 

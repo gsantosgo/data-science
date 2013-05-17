@@ -42,30 +42,27 @@ def lines_tweets_json(filename):
 	tweets_file.close()
 	return tweets
 		
-def frequency(tweets): 		
+def frequency(tweets): 			
+	totalTerms  = 0.0 
 	freq_dic = {}
-	punctuation = re.compile(r'[.?!,":;)]') 
-	word_list = tweets.split(" ")
-	for word in word_list:
-		# remove punctuation marks
-		word = punctuation.sub("", word)
-		try:
-			freq_dic[word] += 1
-		except:
-			freq_dic[word] = 1	
-
-	for word_key in freq_dic.keys():
-		print word_key + " " + str(float(freq_dic[word_key]) / len(freq_dic))
-
+	for x in tweets:
+		for word in x.split():
+			totalTerms += 1 
+			if word in freq_dic:
+				x = (freq_dic)[word] + 1.0		
+				freq_dic[word] += x
+			elif word.isalnum() or "," in word:
+				freq_dic[word] = 1.0
+	for x in range(len(freq_dic)):
+		print freq_dic.keys()[x] + " " + str(freq_dic.values()[x] / totalTerms)	
 	
 def main():
 	# Tweets 
 	tweets = lines_tweets_json(sys.argv[1]) 	
 	#tweets = ["RT @miguelinlas3 Why Linux is faster than Windows http://blog.zorinaq.com/?e=74  written by a Windows kernel developer","Does not work doubt can't stand", "Worth celebrated celebrates"]		
-	all_tweets = " ".join(tweets)
-	
+		
 	# Calculate Sentiment Scores 
-	frequency(all_tweets)
+	frequency(tweets)
 		
 if __name__ == '__main__':
 	try:
